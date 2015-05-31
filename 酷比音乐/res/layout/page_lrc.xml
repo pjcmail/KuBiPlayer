@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical" >
+    <TextView
+   		    android:layout_weight="1"  		    
+   		    android:layout_width="fill_parent"
+        	android:layout_height="fill_parent"       
+   		    />
+    <TextView
+   		    android:id="@+id/tv_prevLrc_head"
+   		    android:layout_weight="1"
+   		    android:alpha="0.7" 
+   		    android:layout_width="fill_parent"
+        	android:layout_height="fill_parent"
+        	android:textColor="#ffffff"
+        	android:gravity="bottom|center"
+        	android:textSize="25px"
+   		    />
+    <TextView
+   		    android:id="@+id/tv_prevLrc"
+   		    android:layout_weight="1"
+   		    android:alpha="0.7" 
+   		    android:layout_width="fill_parent"
+        	android:layout_height="fill_parent"
+        	android:textColor="#ffffff"
+        	android:gravity="center"
+        	android:textSize="25px"
+   		    />
+   	<TextView
+   	    android:id="@+id/tv_nowLrc"
+   	    android:layout_weight="1"
+       	android:layout_width="fill_parent"
+       	android:layout_height="fill_parent"
+       	android:gravity="center"
+       	android:text="酷比 传播好音乐"
+       	android:textSize="30px"
+       	android:textColor="#A6FFFF"
+       	 />
+   	<TextView
+   	    android:id="@+id/tv_nextLrc"
+   	    android:layout_weight="1"
+   	    android:alpha="0.7"
+       	android:layout_width="fill_parent"
+       	android:layout_height="fill_parent"
+       	android:textColor="#ffffff"
+       	android:gravity="center"
+       	android:textSize="25px"
+       	/>
+   	<TextView
+   		    android:id="@+id/tv_nextLrc_end"
+   		    android:layout_weight="1"
+   		    android:alpha="0.7" 
+   		    android:layout_width="fill_parent"
+        	android:layout_height="fill_parent"
+        	android:textColor="#ffffff"
+        	android:gravity="center|top"
+        	android:textSize="25px"
+   		    />
+   	 <TextView
+   		    android:layout_weight="1"  		    
+   		    android:layout_width="fill_parent"
+        	android:layout_height="fill_parent"       
+   		    />
+    
+
+</LinearLayout>
