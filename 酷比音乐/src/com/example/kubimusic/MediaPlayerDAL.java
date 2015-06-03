@@ -38,6 +38,11 @@ public class MediaPlayerDAL implements MediaPlayer.OnCompletionListener{
 	public static MediaPlayer getPlayer(){
 		return player;
 	}
+	public static Music getCurrentMusic(){
+		Music _Music = mp3List.get(currentMusicPosition);
+		return _Music;
+		
+	}
 	public void setCurrentMusicPosition(int position){
 		currentMusicPosition = position;
 	}

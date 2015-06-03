@@ -27,6 +27,10 @@
             android:name="com.example.activity.LrcDialogActivity"
             android:theme="@android:style/Theme.Holo.Dialog.NoActionBar" >
         </activity>
+        <activity 
+            android:name="com.example.activity.LrcActivity"
+            android:theme="@android:style/Theme.Holo.NoActionBar" >
+        </activity>
     </application>
 
 </manifest>

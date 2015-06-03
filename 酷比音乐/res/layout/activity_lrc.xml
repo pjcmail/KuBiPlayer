@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/mainbg"
+    android:orientation="vertical" >
+    <RelativeLayout 
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:background="@drawable/actionbar_bg"
+        >
+        <TextView 
+            android:id="@+id/tv_download_lrc"
+            android:text="下载"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:textColor="@android:color/white"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="10dp"
+            />
+        <TextView 
+            android:id="@+id/tv_back"
+            android:text="返回"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:textColor="@android:color/white"
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="10dp"
+            />
+        
+    </RelativeLayout>
+    <com.mylrc.tool.CLrcCtrl
+	    android:layout_height="0dp"
+	    android:layout_width="fill_parent"
+	    android:layout_weight="1"
+	    android:id="@+id/lrcView"
+	    android:layout_marginBottom="20dp"
+	    android:layout_marginTop="20dp"
+	    />
+</LinearLayout>

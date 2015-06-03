@@ -25,6 +25,7 @@
         android:layout_marginLeft="25dip"
         android:layout_marginRight="25dip"
         android:layout_marginTop="20.0dip"
+        
         android:orientation="vertical" >
 
         <LinearLayout
