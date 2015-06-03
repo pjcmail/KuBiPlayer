@@ -77,9 +77,6 @@ public class LrcDialogActivity extends ActivityBase implements OnClickListener{
 					handler.sendMessage(message);
 					boolean isSaveOk = LrcUtil.saveLrcFile(_LrcList, name);
 					if(isSaveOk){
-						LrcUtil.clearList(MainActivity.getLrcList());
-						LrcUtil.clearList(MainActivity.getTimeList());
-						LrcUtil.setLrcTextAndtTime(MainActivity.getLrcList(), MainActivity.getTimeList(), name);
 					}
 					else{
 						message.what=-1;

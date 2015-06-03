@@ -27,7 +27,14 @@ public class MediaPlayerDAL implements MediaPlayer.OnCompletionListener{
 	private static int currentMusicPosition = -1;
 	//包含所有音乐的列表
 	private static List<Music> mp3List;
+	private musicCompletionListener mMusicCompletion;
 
+	public interface musicCompletionListener{
+		void onPlayNext(int position);
+	}
+	public void setMusicCompletionListener(musicCompletionListener listener){
+		mMusicCompletion = listener;
+	}
 	public static MediaPlayer getPlayer(){
 		return player;
 	}
@@ -133,10 +140,7 @@ public class MediaPlayerDAL implements MediaPlayer.OnCompletionListener{
 	@Override
 	public void onCompletion(MediaPlayer mp) {
 		player = mp;
-		next();
-		String _MusicName = MusicUtil.getRealMusicName(mp3List.get(currentMusicPosition).name);
-		LrcUtil.clearList(MainActivity.getLrcList());
-		LrcUtil.clearList(MainActivity.getTimeList());
-		LrcUtil.setLrcTextAndtTime(MainActivity.getLrcList(), MainActivity.getTimeList(), _MusicName);
+		currentMusicPosition = ++currentMusicPosition<=mp3List.size()?currentMusicPosition:mp3List.size();
+		mMusicCompletion.onPlayNext(currentMusicPosition);
 	}
 }

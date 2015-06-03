@@ -11,14 +11,17 @@ import com.example.adapter.MusicAdapter;
 import com.example.adapter.MyPageAdapter;
 import com.example.kubimusic.KuBiConfiguation;
 import com.example.kubimusic.MediaPlayerDAL;
+import com.example.kubimusic.MediaPlayerDAL.musicCompletionListener;
 import com.example.kubimusic.Music;
 import com.example.kubimusic.R;
 import com.example.util.LrcUtil;
 import com.example.util.MusicUtil;
 import com.example.util.RoundImageDrawable;
 import com.example.viewpage_anim.DepthPageTransformer;
+import com.mylrc.tool.CLrcCtrl;
 
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.R.bool;
@@ -30,6 +33,7 @@ import android.graphics.BitmapFactory;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,16 +43,16 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SeekBar;
+import android.widget.Toast;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
-public class MainActivity extends ActivityBase implements OnClickListener,OnItemClickListener,Runnable{
+public class MainActivity extends ActivityBase implements OnClickListener,OnItemClickListener,Runnable,musicCompletionListener{
 	private DrawerLayout mDrawerLayout;
 	private ImageButton mMenutoggle;
-	private TextView mMusicName,mSingerName;
-	private TextView mLrc_1,mLrc_2,mLrc_3,mLrc_4,mLrc_5;
-	private TextView mLrcTextView;
+	private TextView mMusicName,mSingerName,mSearchLrc;
 	private TextView mNowTime,mEndTime;
+	private CLrcCtrl mLrcView;
 	private SeekBar mSeekbar;
 	private ImageButton mPrevMusicBtn,mStartAndPauseBtn,mNextMusicBtn;
 	private ImageView mPicView;
@@ -56,14 +60,14 @@ public class MainActivity extends ActivityBase implements OnClickListener,OnItem
 	private ViewPager mViewPager;
 	private ListView mMusicList;
 	private List<View> mPageList;
-	private static List<String> lrcList;
-	private static List<Long> timeList;
 	private MediaPlayerDAL mPlayerDAL;
 	private MyHandler mHandler;
 	private ShowLrcHandler mLrcHandler;
 	private Thread mThread;
 	private boolean isExit = false;
 	private int oldLrcIndex = 0;
+	private View mainBg ;
+	private String rootLrcPath = Environment.getExternalStorageDirectory().getAbsolutePath()+"/KuBi/lrc/";
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -75,29 +79,16 @@ public class MainActivity extends ActivityBase implements OnClickListener,OnItem
 	}
 	private void initViriable(){
 		mPlayerDAL = MediaPlayerDAL.getInstance(this);
+		mPlayerDAL.setMusicCompletionListener(this);
 		mPageList = new ArrayList<View>();
 		mActionBarDrawerToggle = new MyActionBarDrawerToggle(this, mDrawerLayout, R.drawable.ic_launcher, 
 				R.string.open,R.string.close){
 		};
-		lrcList = new ArrayList<String>();
-		timeList = new ArrayList<Long>();
 		mHandler = new MyHandler();
 		mLrcHandler = new ShowLrcHandler();
 		mThread = new Thread(this);
 		mThread.start();
 		setLrcFloderInit();
-	}
-	public static List<String> getLrcList() {
-		return lrcList;
-	}
-	public static void setLrcList(List<String> plrcList) {
-		lrcList = plrcList;
-	}
-	public static List<Long> getTimeList() {
-		return timeList;
-	}
-	public static void setTimeList(List<Long> ptimeList) {
-		timeList = ptimeList;
 	}
 	private void setLrcFloderInit() {
 		File sd = new File(KuBiConfiguation.LRC_ROOT_PATH);
@@ -105,11 +96,12 @@ public class MainActivity extends ActivityBase implements OnClickListener,OnItem
 			sd.mkdirs();
 	}
 	private void initView(){
+		mainBg = findViewById(R.id.LinearLayout1);
 		mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 		mMusicList = (ListView) findViewById(R.id.lv_musicList);
 		mMenutoggle = (ImageButton)findViewById(R.id.ib_menuToggle);
-		mLrcTextView = (TextView) findViewById(R.id.tv_lrc);
 		mMusicName = (TextView)findViewById(R.id.tv_music_name);
+		mSearchLrc = (TextView) findViewById(R.id.tv_lrc);
 		mSingerName = (TextView)findViewById(R.id.tv_music_singer);
 		mNowTime = (TextView) findViewById(R.id.tv_nowTime);
 		mEndTime = (TextView) findViewById(R.id.tv_endTime);
@@ -121,22 +113,22 @@ public class MainActivity extends ActivityBase implements OnClickListener,OnItem
 		View v1 = LayoutInflater.from(this).inflate(R.layout.page_lrc, null);
 		View v2 = LayoutInflater.from(this).inflate(R.layout.page_pic, null);
 		mPicView = (ImageView) v2.findViewById(R.id.iv_pic);
-		mLrc_1 = (TextView)v1.findViewById(R.id.tv_prevLrc_head);
-		mLrc_2 = (TextView)v1. findViewById(R.id.tv_prevLrc);
-		mLrc_3 = (TextView)v1.findViewById(R.id.tv_nowLrc);
-		mLrc_4 = (TextView) v1.findViewById(R.id.tv_nextLrc);
-		mLrc_5 = (TextView) v1.findViewById(R.id.tv_nextLrc_end);
+		mLrcView = (CLrcCtrl) v1.findViewById(R.id.lrc_view);
 		mPageList.add(v2);
 		mPageList.add(v1);
 		initViewPager();
 		initMainView();
+		mLrcView.SetTextSize(25);
+		mLrcView.setTextColor(255, 255, 255);
+		mLrcView.setCurrentLineColor(128, 255, 255);
+		mLrcView.setMediaPlayer(MediaPlayerDAL.getPlayer());
+		mLrcView.setCoding("UTF-8");
 	}
-	private void initMainView() {
+	private void initMainView(){
 		mEndTime.setText("00:00");
 		mNowTime.setText("00:00");
 		mSeekbar.setMax(0);
 		mSeekbar.setProgress(0);
-		
 	}
 	private void initViewPager() {
 		mViewPager.setAdapter(new MyPageAdapter(mPageList));
@@ -152,7 +144,7 @@ public class MainActivity extends ActivityBase implements OnClickListener,OnItem
 		mNextMusicBtn.setOnClickListener(this);
 		mPrevMusicBtn.setOnClickListener(this);
 		mStartAndPauseBtn.setOnClickListener(this);
-		mLrcTextView.setOnClickListener(this);
+		mSearchLrc.setOnClickListener(this);
 	}
 	private void bindData(){
 		mMusicList.setAdapter(new MusicAdapter(this, MediaPlayerDAL.getMp3List()));
@@ -170,8 +162,7 @@ public class MainActivity extends ActivityBase implements OnClickListener,OnItem
 		}else if(v.getId()==R.id.ib_startAndpause){
 			startOrPauseMusic();
 		}else if(v.getId()==R.id.tv_lrc){
-			startLrcDialogActivity();
-			
+			startLrcDialogActivity();	
 		}
 	}
 	private void startLrcDialogActivity(){
@@ -183,7 +174,7 @@ public class MainActivity extends ActivityBase implements OnClickListener,OnItem
 		bundle.putString("MusicName", MusicUtil.getRealMusicName(_Music.name));
 		bundle.putString("singer", _Music.singer);
 		_Intent.putExtras(bundle);
-		startActivity(_Intent);
+		startActivityForResult(_Intent,1);
 		overridePendingTransition(R.anim.zoomin, R.anim.zoomout);
 	}
 	private void startOrPauseMusic() {
@@ -195,15 +186,24 @@ public class MainActivity extends ActivityBase implements OnClickListener,OnItem
 	}
 	private void playPrevMusic() {
 		mPlayerDAL.prev();
-		Music _Music = MediaPlayerDAL.getMp3List().get(MediaPlayerDAL.getCurrentMusicPosition());
-		updateUI(_Music);
-		initLrcViewWhenChangeMusic();
+		playMusic(MediaPlayerDAL.getCurrentMusicPosition());
+		
 	}
-	private void playNextMusic() {
-		mPlayerDAL.next();
-		Music _Music = MediaPlayerDAL.getMp3List().get(MediaPlayerDAL.getCurrentMusicPosition());
+	private void playMusic(int currentMusicPosition) {
+		Music _Music = MediaPlayerDAL.getMp3List().get(currentMusicPosition);
 		updateUI(_Music);
 		initLrcViewWhenChangeMusic();
+		mPlayerDAL.startMusic(_Music);
+		readLrc(_Music);
+	}
+	private void readLrc(Music _Music) {
+		mLrcView.readlrc(rootLrcPath+MusicUtil.getRealMusicName(_Music.name)+".lrc");
+		mLrcView.setMediaPlayer(mPlayerDAL.getPlayer());
+		mLrcHandler.sendEmptyMessageDelayed(100, 50);
+	}
+	private void playNextMusic(){
+		mPlayerDAL.next();
+		playMusic(MediaPlayerDAL.getCurrentMusicPosition());
 	}
 	/**
 	 * 点击左上角按钮，判断打开还是关闭列表
@@ -280,31 +280,12 @@ public class MainActivity extends ActivityBase implements OnClickListener,OnItem
 			mMenutoggle.setImageResource(R.drawable.open_menu);
 		}
 	}
-	private void setLrcViewNULL(){
-		mLrc_1.setText("");
-		mLrc_2.setText("");
-		mLrc_3.setText("找不到歌词");
-		mLrc_4.setText("");
-		mLrc_5.setText("");
-		
-	}
-	private void showLrcOnView(int i){
-		if(i-3>=0){
-			mLrc_1.setText(lrcList.get(i-3));
-		}
-		if(i-2>=0)
-			mLrc_2.setText(lrcList.get(i-2));
-		mLrc_3.setText(lrcList.get(i-1));
-		if(i<timeList.size())
-			mLrc_4.setText(lrcList.get(i));
-		if((i+1)<timeList.size())
-			mLrc_5.setText(lrcList.get(i+1));
-	}
 	private class MyHandler extends Handler{
 		@Override
 		public void handleMessage(Message msg) {
 			super.handleMessage(msg);
 			int _position = msg.what;
+			_position = _position==-1?0:_position;
 			updateUI(MediaPlayerDAL.getMp3List().get(_position));
 			updateTimeAndSeek(_position);		
 		}
@@ -312,28 +293,14 @@ public class MainActivity extends ActivityBase implements OnClickListener,OnItem
 	private class ShowLrcHandler extends Handler{
 		@Override
 		public void handleMessage(Message msg) {
-			super.handleMessage(msg);
-			if(timeList.size() == 0){
-				setLrcViewNULL();
-				return;
-			}
-			long currentTime = MediaPlayerDAL.getCurrentPlayerPosition();
-			if(MediaPlayerDAL.getState()==1){
-				for(int i=oldLrcIndex;i<timeList.size();i++){
-					if(currentTime<timeList.get(i)&&currentTime>timeList.get(i-1)){
-						showLrcOnView(i);
-						oldLrcIndex = i;
-						break;
-					}else{
-						mLrc_3.setText(lrcList.get(0));
-						mLrc_4.setText(lrcList.get(1));
-						mLrc_5.setText(lrcList.get(2));
-						
-					}
-				}
-			}
+			 if (mPlayerDAL.getPlayer().isPlaying()){
+				 	mLrcView.requestFocusFromTouch();
+	                mLrcView.setSongLength(mPlayerDAL.getPlayer().getDuration());
+	                mLrcView.setcurLength(mPlayerDAL.getPlayer().getCurrentPosition());
+	                mLrcView.invalidate();
+	                mLrcHandler.sendEmptyMessageDelayed(100, 50);
+	            }
 		}
-		
 	}
 	private class SeekbarChangedListener implements OnSeekBarChangeListener{
 
@@ -353,6 +320,7 @@ public class MainActivity extends ActivityBase implements OnClickListener,OnItem
 	}
 	private void setSeekBarWhenClick(SeekBar pSeekBar){
 		mPlayerDAL.getPlayer().seekTo(pSeekBar.getProgress());
+		
 	} 
 	private void updateTimeAndSeek(int _position) {
 		String endTime = MusicUtil.toTime(MediaPlayerDAL.getMp3List().get(_position).time);
@@ -362,23 +330,13 @@ public class MainActivity extends ActivityBase implements OnClickListener,OnItem
 	}
 	@Override
 	public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
-		Music _Music = MediaPlayerDAL.getMp3List().get(position);
-		mPlayerDAL.startMusic(_Music);
+		playMusic(position);
 		mPlayerDAL.setCurrentMusicPosition(position);
-		updateUI(_Music);
 		initLrcViewWhenChangeMusic();
 		mDrawerLayout.closeDrawer(mMusicList);
 	}
-	private void initLrcViewWhenChangeMusic() {
+	private void initLrcViewWhenChangeMusic(){
 		oldLrcIndex = 1;
-		setLrcViewNULL();
-		LrcUtil.clearList(timeList);
-		LrcUtil.clearList(lrcList);
-		Music _Music = MediaPlayerDAL.getMp3List().get(MediaPlayerDAL.getCurrentMusicPosition());
-		boolean bo = LrcUtil.setLrcTextAndtTime(lrcList, timeList, MusicUtil.getRealMusicName(_Music.name));
-		if(!bo){
-			mLrc_3.setText("找不到歌词");
-		}
 	}
 	@Override
 	public void run() {
@@ -392,9 +350,19 @@ public class MainActivity extends ActivityBase implements OnClickListener,OnItem
 				Message messageLRC = new Message();
 				messageUI.what = nowPosition;
 				mHandler.sendMessage(messageUI);
-				mLrcHandler.sendMessage(messageLRC);
 			}
 		}
+	}
+	@Override
+	public void onPlayNext(int position){
+		playMusic(position);
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		Music music =mPlayerDAL.getMp3List().get(mPlayerDAL.getCurrentMusicPosition());
+		readLrc(music);
 		
 	}
 }
